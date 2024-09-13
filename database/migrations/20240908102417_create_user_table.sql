@@ -1,0 +1,19 @@
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(200) NOT NULL,
+    title VARCHAR(10) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50) DEFAULT NULL,
+    last_name VARCHAR(50) DEFAULT NULL,
+    gender VARCHAR(2) NOT NULL,
+    bod DATE NOT NULL,
+    pob VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL,
+    photo VARCHAR(200) DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) DEFAULT NULL,
+    UNIQUE (email)
+);
