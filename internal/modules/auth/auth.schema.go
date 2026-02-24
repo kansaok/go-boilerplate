@@ -33,7 +33,6 @@ type RegisterResponseSchema struct {
 	} `json:"data"`
 }
 
-
 // LoginRequestSchema defines the structure for a login request
 // @Description Login user with email and password
 type LoginRequestSchema struct {
