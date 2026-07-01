@@ -1,0 +1,84 @@
+GOOS=linux GOARCH=amd64 go build -o hasilbuild
+masuk ke ssh
+buat folder untuk apps
+
+upload hasil build ke folder tersebut, upload juga .env dan folder lain jika ada yang yang berhubungan dengan upload, log, dll,
+    case disini yang perlu di upload adalah .env, log/, web/, uploads/
+
+Pastikan file dan folder yang Anda unggah memiliki izin yang benar agar dapat diakses oleh Nginx
+    sudo chown -R www-data:www-data /var/www/test/
+    sudo chmod -R 755 /var/www/test/
+
+jalankan perintah berikut supaya hasil build bisa di execute
+    chmod +x /var/www/test/build
+
+setting nginx buat file konfigurasi dengan command berikut sudo nano /etc/nginx/sites-available/myapp
+    server {
+        listen 80;
+        server_name test.haressa.id;
+
+        # Melayani folder uploads
+        location /uploads/ {
+            root /var/www/test;
+        }
+
+        # Melayani folder web
+        location /web/ {
+            root /var/www/test;
+        }
+
+        # Melayani folder docs
+        location /docs/ {
+            root /var/www/test;
+        }
+
+        # Proxy ke aplikasi Go
+        location / {
+            proxy_pass http://localhost:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+buat symlink config nginx dengan command
+    sudo ln -s /etc/nginx/sites-available/test /etc/nginx/sites-enabled/
+
+verifikasi hasil config nginx
+    sudo nginx -t
+
+restart nginx
+    sudo systemctl restart nginx
+
+allow port yang digunakan di appsnya, misal case ini menggunakan port 8080
+    sudo ufw allow 8080
+
+execute apps di background process dengan command
+    cd /var/www/test
+    nohup ./build > app.log 2>&1 &
+
+cek apakah aplikasi berjalan di port tertentu
+    netstat -tuln | grep 8080
+
+jika belum open ssh jalankan ini:
+    sudo ufw allow OpenSSH
+
+jika belum open port 80 dan 443 jalankan ini:
+    sudo ufw allow 'Nginx Full'
+
+jika belum mengaktifkan firewall jalankan ini:
+    sudo ufw enable
+
+konfirgurasi SSL
+Install Certbot:
+    sudo apt install certbot python3-certbot-nginx
+
+Dapatkan sertifikat SSL
+    sudo certbot --nginx -d test.haressa.id
+
+Setel Auto-Renew untuk SSL
+    sudo certbot renew --dry-run
+
+periksa log
+    tail -f app.log

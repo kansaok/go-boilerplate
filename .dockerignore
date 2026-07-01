@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+log/
+*.log.*
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# Build artifacts
+main
+bin/
+dist/
+tmp/
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# Testing
+coverage.txt
+cover.out
+_test.go
+
+# Go modules (keep go.mod and go.sum)
+go.sum.bak
+go.mod.bak
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Storage and uploads (use volumes instead)
+storage/
+uploads/
+
+# Swag docs (generated at runtime)
+docs/swagger.json
+docs/swagger.yaml
