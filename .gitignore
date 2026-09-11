@@ -1,0 +1,12 @@
+.env
+.idea
+.DS_Store
+.vscode/
+bin/
+*.log
+.gitconfig
+./go-boilerplate
+uploads/
+storage/sqlite/
+storage/sqlite/*
+web/assets/
