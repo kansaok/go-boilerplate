@@ -35,6 +35,8 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - app-network
+    # Tidak ada port mapping ke host: database production hanya boleh
+    # diakses lewat jaringan internal app-network, bukan dari luar.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -45,13 +47,15 @@ services:
   redis:
     image: redis:7-alpine
     container_name: go-boilerplate-redis
-    command: ["redis-server", "--appendonly", "no"]
-    ports:
-      - "6379:6379"
+    command: ["redis-server", "--appendonly", "no", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD harus di-set di .env}"]
+    env_file:
+      - .env
+    # Tidak ada port mapping ke host: di production Redis hanya boleh
+    # diakses lewat jaringan internal app-network, bukan dari luar.
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
