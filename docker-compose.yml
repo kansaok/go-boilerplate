@@ -13,8 +13,11 @@ services:
     environment:
       - DB_HOST=database
       - DB_CONNECTION=postgres
+      - REDIS_HOST=redis
     depends_on:
       database:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./storage/sqlite:/app/storage/sqlite
@@ -35,6 +38,20 @@ services:
       - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: go-boilerplate-redis
+    command: ["redis-server", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5

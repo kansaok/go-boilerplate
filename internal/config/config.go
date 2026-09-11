@@ -14,12 +14,19 @@ type AppConfig struct {
 	JWTConfig      *JWTConfig
 	CORSConfig     cors.Config
 	SecurityConfig SecurityConfig
+	RedisConfig    *RedisConfig
 }
 
 var (
 	appConfig  *AppConfig
 	configOnce sync.Once
 )
+
+// ResetConfigTestOnly mereset cache konfigurasi agar unit test bisa memuat
+// ulang environment. Hanya boleh dipanggil dari test.
+func ResetConfigTestOnly() {
+	configOnce = sync.Once{}
+}
 
 // LoadConfig loads all application configurations (cached after first call).
 func LoadConfig() *AppConfig {
@@ -35,6 +42,7 @@ func LoadConfig() *AppConfig {
 			JWTConfig:      LoadJWTConfig(),
 			CORSConfig:     CORSConfig(),
 			SecurityConfig: LoadSecurityConfigs(),
+			RedisConfig:    LoadRedisConfig(),
 		}
 	})
 	return appConfig

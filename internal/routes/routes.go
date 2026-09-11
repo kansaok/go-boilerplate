@@ -20,6 +20,8 @@ func SetupRoutes() *gin.Engine {
 
 	r.Use(cors.New(config.CORSConfig()))
 
+	r.Use(middleware.BodyLimitMiddleware(config.LoadConfig().SecurityConfig.MaxBodyBytes))
+
 	r.Use(middleware.LoggingMiddleware())
 	r.Use(middleware.TracingMiddleware())
 	r.Use(middleware.RateLimitMiddleware(middleware.GlobalLimiter))
@@ -32,7 +34,7 @@ func SetupRoutes() *gin.Engine {
 	r.Use(middleware.SetXSSFilterHeader)
 	r.Use(middleware.SetContentTypeNosniffHeader)
 
-	r.GET("/metrics", telemetry.PrometheusHandler())
+	r.GET("/metrics", middleware.MetricsProtection(), telemetry.PrometheusHandler())
 
 	r.Use(middleware.CSRFValidation())
 
@@ -40,6 +42,7 @@ func SetupRoutes() *gin.Engine {
 	{
 		authRoutes := api.Group("/auth")
 		authRoutes.Use(middleware.RateLimitAuth())
+		authRoutes.Use(middleware.BodyLimitMiddleware(1 << 20))
 		AuthRoutes(authRoutes)
 
 		protected := api.Group("")

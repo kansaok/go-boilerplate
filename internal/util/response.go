@@ -15,6 +15,7 @@ const (
 	CodeBadRequest     	= 400
 	CodeForbidden      	= 403
 	CodeNotAllowed     	= 405
+	CodeRequestEntityTooLarge = 413
 	CodeUnknownError   	= 500
 )
 

@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/kansaok/go-boilerplate/internal/config"
 	usr "github.com/kansaok/go-boilerplate/internal/modules/user"
+	"github.com/kansaok/go-boilerplate/internal/service"
 	"github.com/kansaok/go-boilerplate/internal/util"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -29,6 +30,12 @@ func RegisterUser(ctx context.Context, req RegisterRequest) (map[string]interfac
 	if req.Password != req.ConfirmPassword {
 		return nil, errors.New("password dan konfirmasi password tidak cocok")
 	}
+
+	limiter := service.GetAccountLimiter()
+	if limiter.CheckRegisterThrottled(req.Email) {
+		return nil, errors.New("terlalu banyak percobaan registrasi untuk email ini")
+	}
+	limiter.RecordRegisterAttempt(req.Email)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
 	if err != nil {
@@ -60,6 +67,11 @@ func RegisterUser(ctx context.Context, req RegisterRequest) (map[string]interfac
 }
 
 func AuthenticateUser(email, password string, jwtConfig *config.JWTConfig) (string, error) {
+	limiter := service.GetAccountLimiter()
+	if limiter.CheckLoginLocked(email) {
+		return "", errors.New("akun dikunci sementara karena terlalu banyak percobaan gagal")
+	}
+
 	user, err := GetUserByEmail(email)
 	if err != nil {
 		return "", err
@@ -68,12 +80,16 @@ func AuthenticateUser(email, password string, jwtConfig *config.JWTConfig) (stri
 	if user == nil {
 		// Equalize timing with the bcrypt compare to prevent user enumeration
 		bcrypt.CompareHashAndPassword(dummyBcryptHash, []byte(password))
+		limiter.RecordLoginFailure(email)
 		return "", errors.New("email atau password salah")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		limiter.RecordLoginFailure(email)
 		return "", errors.New("email atau password salah")
 	}
+
+	limiter.ResetLoginFailures(email)
 
 	token, err := GenerateToken(user.Email, jwtConfig)
 	if err != nil {

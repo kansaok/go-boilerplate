@@ -69,14 +69,20 @@ func TestRateLimiter_CleanupEvictsStaleEntries(t *testing.T) {
 	ctx := context.Background()
 
 	rl.Allow(ctx, "stale-client")
-	if _, exists := rl.clients["stale-client"]; !exists {
+	rl.mu.Lock()
+	_, exists := rl.clients["stale-client"]
+	rl.mu.Unlock()
+	if !exists {
 		t.Fatal("client should be tracked initially")
 	}
 
 	time.Sleep(150 * time.Millisecond)
 	rl.cleanup()
 
-	if _, exists := rl.clients["stale-client"]; exists {
+	rl.mu.Lock()
+	_, exists = rl.clients["stale-client"]
+	rl.mu.Unlock()
+	if exists {
 		t.Fatal("stale client entry should be evicted after 2x interval")
 	}
 }
